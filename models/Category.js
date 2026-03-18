@@ -6,9 +6,8 @@ const categorySchema = new mongoose.Schema({
     bn: { type: String, default: '', trim: true }
   },
   description: {
-    type: String,
-    default: '',
-    trim: true,
+    en: { type: String, default: '', trim: true },
+    bn: { type: String, default: '', trim: true }
   },
   icon: {
     type: String,
