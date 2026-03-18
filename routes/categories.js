@@ -30,7 +30,9 @@ router.post('/', protect, adminOnly, async (req, res) => {
   try {
     const { name, description, icon, color } = req.body;
 
-    if (!name) return res.status(400).json({ message: 'Category name is required' });
+    if (!name || (!name.en && !name.bn)) {
+      return res.status(400).json({ message: 'Category name (English or Bengali) is required' });
+    }
 
     const category = await Category.create({ name, description, icon, color });
     res.status(201).json(category);
@@ -49,7 +51,10 @@ router.put('/:id', protect, adminOnly, async (req, res) => {
 
     const category = await Category.findByIdAndUpdate(
       req.params.id,
-      { name, description, icon, color },
+      { 
+        name: name ? { ...name } : undefined, // Replace if provided
+        description, icon, color 
+      },
       { new: true, runValidators: true }
     );
 

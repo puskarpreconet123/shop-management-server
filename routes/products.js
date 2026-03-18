@@ -11,7 +11,12 @@ router.get('/', async (req, res) => {
     const filter = {};
 
     if (category && category !== 'all') filter.category = category;
-    if (search) filter.name = { $regex: search, $options: 'i' };
+    if (search) {
+      filter.$or = [
+        { 'name.en': { $regex: search, $options: 'i' } },
+        { 'name.bn': { $regex: search, $options: 'i' } }
+      ];
+    }
     if (inStock === 'true') filter.inStock = true;
 
     const products = await Product.find(filter)
@@ -44,8 +49,8 @@ router.post('/', protect, adminOnly, upload.single('image'), async (req, res) =>
   try {
     const { name, description, price, priceType, category, inStock, imageBase64 } = req.body;
 
-    if (!name || !price || !priceType) {
-      return res.status(400).json({ message: 'Name, price, and price type are required' });
+    if (!name || (!name.en && !name.bn) || !price || !priceType) {
+      return res.status(400).json({ message: 'Name (English or Bengali), price, and price type are required' });
     }
 
     let imageUrl    = null;
@@ -117,8 +122,8 @@ router.put('/:id', protect, adminOnly, upload.single('image'), async (req, res) 
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
       {
-        name:        name        || product.name,
-        description: description !== undefined ? description : product.description,
+        name:        name        ? { ...product.name, ...name } : product.name,
+        description: description ? { ...product.description, ...description } : product.description,
         price:       price       ? parseFloat(price) : product.price,
         priceType:   priceType   || product.priceType,
         imageUrl,
